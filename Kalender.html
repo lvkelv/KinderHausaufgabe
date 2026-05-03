@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lernwochenplan</title>
+  <title>Lernwochenplan Lian &amp; Lean</title>
   <style>
     :root {
       --time-width: 96px;
@@ -88,19 +88,15 @@
       letter-spacing: 0.02em;
     }
 
-    .title-block p {
-      margin: 0;
-      max-width: 760px;
-      color: var(--subtle);
-      font-size: 1rem;
-      line-height: 1.5;
-    }
-
     .actions {
       display: flex;
       gap: 12px;
       flex-wrap: wrap;
       justify-content: flex-end;
+    }
+
+    .help-anchor {
+      position: relative;
     }
 
     .button {
@@ -128,21 +124,57 @@
       box-shadow: 0 10px 18px rgba(38, 59, 87, 0.08);
     }
 
-    .tip {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 18px;
-      padding: 13px 16px;
-      border-radius: 18px;
-      border: 1px solid rgba(73, 103, 141, 0.12);
-      background: rgba(255, 255, 255, 0.7);
-      color: var(--subtle);
-      font-size: 0.95rem;
+    .button.help-button {
+      width: 46px;
+      height: 46px;
+      padding: 0;
+      border-radius: 50%;
+      font-size: 1.3rem;
+      font-weight: 800;
+      line-height: 1;
     }
 
-    .tip strong {
-      color: var(--ink);
+    .help-popover {
+      position: absolute;
+      top: calc(100% + 12px);
+      right: 0;
+      width: min(380px, calc(100vw - 48px));
+      padding: 18px;
+      border: 1px solid rgba(73, 103, 141, 0.14);
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.97);
+      box-shadow: 0 22px 40px rgba(19, 48, 83, 0.16);
+      backdrop-filter: blur(10px);
+      z-index: 25;
+    }
+
+    .help-popover::before {
+      content: "";
+      position: absolute;
+      top: -8px;
+      right: 18px;
+      width: 16px;
+      height: 16px;
+      border-top: 1px solid rgba(73, 103, 141, 0.14);
+      border-left: 1px solid rgba(73, 103, 141, 0.14);
+      background: rgba(255, 255, 255, 0.97);
+      transform: rotate(45deg);
+    }
+
+    .help-popover h2 {
+      margin: 0 0 10px;
+      font-size: 1rem;
+    }
+
+    .help-popover p {
+      margin: 0;
+      color: var(--subtle);
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    .help-popover p + p {
+      margin-top: 10px;
     }
 
     .calendar {
@@ -152,7 +184,7 @@
         linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 251, 255, 0.97)),
         linear-gradient(90deg, rgba(23, 68, 117, 0.02), transparent 14%, transparent 86%, rgba(23, 68, 117, 0.02));
       overflow-x: auto;
-      overflow-y: visible;
+      overflow-y: hidden;
     }
 
     .week-grid {
@@ -182,27 +214,19 @@
 
     .day-header {
       position: relative;
-      padding: 16px 16px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 54px 14px 16px;
       border-bottom: 1px solid var(--panel-border);
       border-right: 1px solid var(--panel-border);
       background:
         linear-gradient(180deg, rgba(247, 250, 255, 0.94), rgba(255, 255, 255, 0.98));
+      text-align: center;
     }
 
     .day-header:last-of-type {
       border-right: 0;
-    }
-
-    .day-short {
-      display: inline-block;
-      margin-bottom: 8px;
-      padding: 4px 8px;
-      background: rgba(20, 95, 201, 0.08);
-      color: var(--accent);
-      font-size: 0.72rem;
-      font-weight: 800;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
     }
 
     .day-name {
@@ -210,6 +234,7 @@
       font-size: 1.08rem;
       font-weight: 800;
       letter-spacing: 0.02em;
+      line-height: 1.2;
     }
 
     .day-add {
@@ -236,14 +261,7 @@
       overflow: visible;
       z-index: 3;
       border-right: 1px solid var(--panel-border);
-      background:
-        repeating-linear-gradient(
-          to bottom,
-          rgba(246, 249, 255, 0.96) 0,
-          rgba(246, 249, 255, 0.96) calc(var(--hour-height) - 1px),
-          var(--line-color) calc(var(--hour-height) - 1px),
-          var(--line-color) var(--hour-height)
-        );
+      background: rgba(246, 249, 255, 0.96);
     }
 
     .time-slot {
@@ -261,18 +279,15 @@
       z-index: 2;
     }
 
+    .time-slot.is-end-slot {
+      transform: translateY(-100%);
+    }
+
     .day-track {
       position: relative;
       grid-row: 2;
       border-right: 1px solid var(--panel-border);
-      background:
-        repeating-linear-gradient(
-          to bottom,
-          rgba(255, 255, 255, 0.96) 0,
-          rgba(255, 255, 255, 0.96) calc(var(--hour-height) - 1px),
-          var(--line-strong) calc(var(--hour-height) - 1px),
-          var(--line-strong) var(--hour-height)
-        );
+      background: rgba(255, 255, 255, 0.96);
       cursor: crosshair;
     }
 
@@ -288,6 +303,25 @@
         linear-gradient(180deg, rgba(20, 95, 201, 0.025), transparent 12%, transparent 88%, rgba(20, 95, 201, 0.025)),
         linear-gradient(90deg, rgba(20, 95, 201, 0.03), transparent 24%, transparent 76%, rgba(20, 95, 201, 0.03));
       pointer-events: none;
+      z-index: 0;
+    }
+
+    .hour-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 0;
+      border-top: 1px solid transparent;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .time-column .hour-line {
+      border-top-color: var(--line-color);
+    }
+
+    .day-track .hour-line {
+      border-top-color: var(--line-strong);
     }
 
     .task {
@@ -305,6 +339,7 @@
       box-shadow: 0 10px 18px rgba(22, 54, 90, 0.08);
       color: #133451;
       text-align: left;
+      z-index: 2;
     }
 
     .task::before {
@@ -336,38 +371,49 @@
 
     .task-compact {
       position: relative;
-      padding-left: 2px;
-      font-size: 0.73rem;
-      font-weight: 800;
-      line-height: 1.1;
+      font-size: inherit;
+      line-height: inherit;
     }
 
     .task.is-compact {
       justify-content: center;
-      gap: 1px;
-      padding-top: 3px;
-      padding-bottom: 3px;
+      gap: 0;
+      padding-top: 2px;
+      padding-bottom: 2px;
+    }
+
+    .task-compact-row {
+      position: relative;
+      display: flex;
+      align-items: center;
+      width: 100%;
+      min-width: 0;
+      gap: var(--compact-gap, 6px);
+      padding-left: 2px;
+      font-size: var(--compact-font-size, 11px);
+      line-height: 1;
     }
 
     .task-compact-title,
     .task-compact-time {
       position: relative;
-      padding-left: 2px;
-      line-height: 1.05;
       overflow: hidden;
       text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .task-compact-title {
-      font-size: 0.74rem;
+      flex: 1 1 auto;
+      min-width: 0;
+      font-size: 1em;
       font-weight: 800;
-      white-space: nowrap;
     }
 
     .task-compact-time {
-      font-size: 0.68rem;
+      flex: 0 0 auto;
+      font-size: 0.92em;
       font-weight: 700;
-      white-space: nowrap;
+      opacity: 0.92;
     }
 
     .task:focus-visible,
@@ -424,6 +470,47 @@
     .field label {
       font-weight: 700;
       font-size: 0.92rem;
+    }
+
+    .day-field {
+      gap: 10px;
+    }
+
+    .day-picker {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(104px, 1fr));
+      gap: 10px;
+    }
+
+    .day-pill {
+      border: 1px solid rgba(73, 103, 141, 0.18);
+      border-radius: 999px;
+      padding: 10px 12px;
+      background: #f8fbff;
+      color: var(--subtle);
+      font-size: 0.88rem;
+      font-weight: 800;
+      line-height: 1.1;
+      text-align: center;
+      box-shadow: none;
+    }
+
+    .day-pill:hover {
+      background: #f0f6ff;
+      box-shadow: 0 8px 16px rgba(20, 95, 201, 0.09);
+    }
+
+    .day-pill.is-active {
+      color: white;
+      background: linear-gradient(135deg, #1774f2, #145fc9);
+      border-color: rgba(20, 95, 201, 0.3);
+      box-shadow: 0 10px 18px rgba(20, 95, 201, 0.18);
+    }
+
+    .day-picker-note {
+      color: var(--subtle);
+      font-size: 0.84rem;
+      line-height: 1.4;
     }
 
     .field input,
@@ -525,8 +612,8 @@
     @media print {
       :root {
         --time-width: 74px;
-        --header-height: 68px;
-        --hour-height: 45px;
+        --header-height: 56px;
+        --hour-height: 42px;
       }
 
       html,
@@ -548,29 +635,21 @@
       }
 
       .actions,
-      .tip,
       .modal-backdrop {
         display: none !important;
       }
 
       .topbar {
-        align-items: flex-end;
-        margin-bottom: 8px;
-        padding: 0 0 8px;
+        align-items: center;
+        margin-bottom: 6px;
+        padding: 0 0 6px;
         border-bottom: 2px solid #365c86;
       }
 
       .title-block h1 {
-        margin-bottom: 2px;
-        font-size: 1.42rem;
+        margin-bottom: 0;
+        font-size: 1.32rem;
         letter-spacing: 0.04em;
-      }
-
-      .title-block p {
-        max-width: none;
-        font-size: 0.78rem;
-        line-height: 1.35;
-        color: #44617f;
       }
 
       .calendar {
@@ -578,13 +657,16 @@
         border-radius: 0;
         border: 1px solid #8ea3bb;
         background: white;
+        break-inside: auto;
+        page-break-inside: auto;
       }
 
       .week-grid {
         min-width: auto;
         width: 100%;
         grid-template-columns: var(--time-width) repeat(7, minmax(0, 1fr));
-        break-inside: avoid;
+        break-inside: auto;
+        page-break-inside: auto;
       }
 
       .corner {
@@ -595,21 +677,14 @@
       }
 
       .day-header {
-        padding: 10px 10px 8px;
+        padding: 8px 28px 8px 8px;
         background: #eff4fa;
         border-right-color: #9bb0c5;
         border-bottom-color: #9bb0c5;
       }
 
-      .day-short {
-        margin-bottom: 6px;
-        padding: 2px 5px;
-        font-size: 0.54rem;
-        background: #dbe8f7;
-      }
-
       .day-name {
-        font-size: 0.92rem;
+        font-size: 0.84rem;
       }
 
       .day-add {
@@ -617,14 +692,7 @@
       }
 
       .time-column {
-        background:
-          repeating-linear-gradient(
-            to bottom,
-            #f8fbff 0,
-            #f8fbff calc(var(--hour-height) - 1px),
-            #a9b9cb calc(var(--hour-height) - 1px),
-            #a9b9cb var(--hour-height)
-          );
+        background: #f8fbff;
         border-right-color: #9bb0c5;
       }
 
@@ -637,19 +705,16 @@
       }
 
       .day-track {
-        background:
-          repeating-linear-gradient(
-            to bottom,
-            white 0,
-            white calc(var(--hour-height) - 1px),
-            #a9b9cb calc(var(--hour-height) - 1px),
-            #a9b9cb var(--hour-height)
-          );
+        background: white;
         border-right-color: #9bb0c5;
       }
 
       .day-track::before {
         background: linear-gradient(90deg, rgba(28, 67, 112, 0.022), transparent 18%, transparent 82%, rgba(28, 67, 112, 0.022));
+      }
+
+      .hour-line {
+        border-top-color: #a9b9cb;
       }
 
       .task {
@@ -675,16 +740,22 @@
       }
 
       .task-compact {
-        font-size: 6.2pt;
-        line-height: 1.05;
+        font-size: inherit;
+        line-height: inherit;
+      }
+
+      .task-compact-row {
+        gap: var(--compact-gap, 3px);
+        font-size: var(--compact-font-size, 6.2pt);
+        line-height: 1;
       }
 
       .task-compact-title {
-        font-size: 6.4pt;
+        font-size: 1em;
       }
 
       .task-compact-time {
-        font-size: 5.9pt;
+        font-size: 0.9em;
       }
     }
   </style>
@@ -693,18 +764,24 @@
   <div class="app">
     <div class="topbar">
       <div class="title-block">
-        <h1>Lernwochenplan</h1>
-        <p>Wochenübersicht von 07:00 bis 21:00. Aufgaben lassen sich minutengenau eintragen, per Doppelklick bearbeiten und als A4-Querformat drucken.</p>
+        <h1>Lernwochenplan Lian &amp; Lean</h1>
       </div>
       <div class="actions">
         <button class="button primary" id="addTaskButton" type="button">Aufgabe hinzufügen</button>
+        <button class="button secondary" id="importButton" type="button">JSON laden</button>
+        <button class="button secondary" id="exportButton" type="button">JSON speichern</button>
         <button class="button secondary" id="printButton" type="button">A4 drucken</button>
+        <div class="help-anchor">
+          <button class="button secondary help-button" id="helpButton" type="button" aria-label="Hilfe anzeigen" aria-expanded="false" aria-controls="helpPopover">?</button>
+          <div class="help-popover" id="helpPopover" role="dialog" aria-label="Hilfe" hidden>
+            <h2>Hilfe</h2>
+            <p>Wochenübersicht von 07:00 bis 21:00. Aufgaben lassen sich minutengenau eintragen, per Doppelklick bearbeiten und als A4-Querformat drucken.</p>
+            <p>Mit <code>+</code> wird eine neue Aufgabe angelegt. Ein Doppelklick auf einen Termin öffnet die Bearbeitung.</p>
+            <p>Die Termine werden automatisch lokal als JSON gespeichert und lassen sich zusätzlich per JSON-Datei laden oder sichern.</p>
+          </div>
+        </div>
+        <input id="importFileInput" type="file" accept="application/json,.json" hidden>
       </div>
-    </div>
-
-    <div class="tip">
-      <strong>Hinweis:</strong>
-      <span>Mit <code>+</code> wird eine neue Aufgabe angelegt. Ein Doppelklick auf einen Termin öffnet die Bearbeitung.</span>
     </div>
 
     <div class="calendar">
@@ -724,9 +801,10 @@
             <label for="taskTitle">Titel</label>
             <input id="taskTitle" name="taskTitle" type="text" maxlength="80" placeholder="Zum Beispiel: Lesen, Mathematik, Klavier">
           </div>
-          <div class="field">
-            <label for="taskDay">Wochentag</label>
-            <select id="taskDay" name="taskDay"></select>
+          <div class="field full day-field">
+            <label id="dayPickerLabel">Wochentage</label>
+            <div class="day-picker" id="dayPicker" role="group" aria-labelledby="dayPickerLabel"></div>
+            <div class="day-picker-note">Mehrere Tage auswählen, um die Aufgabe automatisch zu wiederholen.</div>
           </div>
           <div class="field">
             <label for="taskColor">Farbe</label>
@@ -762,17 +840,20 @@
 
   <script>
     const STORAGE_KEY = "kinder-lernkalender-tasks";
+    const STORAGE_VERSION = 1;
+    const COMPACT_MIN_FONT_SIZE = 8;
+    const COMPACT_MAX_FONT_SIZE = 13;
     const DAY_START = 7 * 60;
     const DAY_END = 21 * 60;
     const TOTAL_MINUTES = DAY_END - DAY_START;
     const DAYS = [
-      { id: "monday", short: "Mo", label: "Montag" },
-      { id: "tuesday", short: "Di", label: "Dienstag" },
-      { id: "wednesday", short: "Mi", label: "Mittwoch" },
-      { id: "thursday", short: "Do", label: "Donnerstag" },
-      { id: "friday", short: "Fr", label: "Freitag" },
-      { id: "saturday", short: "Sa", label: "Samstag" },
-      { id: "sunday", short: "So", label: "Sonntag" }
+      { id: "monday", label: "Montag" },
+      { id: "tuesday", label: "Dienstag" },
+      { id: "wednesday", label: "Mittwoch" },
+      { id: "thursday", label: "Donnerstag" },
+      { id: "friday", label: "Freitag" },
+      { id: "saturday", label: "Samstag" },
+      { id: "sunday", label: "Sonntag" }
     ];
 
     const weekGrid = document.getElementById("weekGrid");
@@ -781,12 +862,19 @@
     const dialogTitle = document.getElementById("dialogTitle");
     const taskIdInput = document.getElementById("taskId");
     const taskTitleInput = document.getElementById("taskTitle");
-    const taskDayInput = document.getElementById("taskDay");
+    const dayPicker = document.getElementById("dayPicker");
     const taskColorInput = document.getElementById("taskColor");
     const taskStartInput = document.getElementById("taskStart");
     const taskEndInput = document.getElementById("taskEnd");
     const formError = document.getElementById("formError");
     const deleteButton = document.getElementById("deleteButton");
+    const helpButton = document.getElementById("helpButton");
+    const helpPopover = document.getElementById("helpPopover");
+    const importButton = document.getElementById("importButton");
+    const exportButton = document.getElementById("exportButton");
+    const importFileInput = document.getElementById("importFileInput");
+    const compactMeasureContext = document.createElement("canvas").getContext("2d");
+    let resizeRenderFrame = 0;
 
     let tasks = loadTasks();
 
@@ -798,8 +886,36 @@
     });
 
     document.getElementById("printButton").addEventListener("click", () => {
+      closeHelpPopover();
       window.print();
     });
+
+    helpButton.addEventListener("click", (event) => {
+      event.stopPropagation();
+      toggleHelpPopover();
+    });
+
+    document.addEventListener("click", (event) => {
+      if (helpPopover.hidden) {
+        return;
+      }
+
+      if (helpPopover.contains(event.target) || helpButton.contains(event.target)) {
+        return;
+      }
+
+      closeHelpPopover();
+    });
+
+    importButton.addEventListener("click", () => {
+      importFileInput.click();
+    });
+
+    importFileInput.addEventListener("change", async (event) => {
+      await importTasksFromFile(event);
+    });
+
+    exportButton.addEventListener("click", exportTasksAsJson);
 
     document.getElementById("cancelButton").addEventListener("click", closeModal);
 
@@ -827,10 +943,29 @@
     });
 
     document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape" && modalBackdrop.classList.contains("open")) {
+      if (event.key !== "Escape") {
+        return;
+      }
+
+      if (modalBackdrop.classList.contains("open")) {
         closeModal();
+        return;
+      }
+
+      if (!helpPopover.hidden) {
+        closeHelpPopover();
       }
     });
+
+    window.addEventListener("resize", () => {
+      cancelAnimationFrame(resizeRenderFrame);
+      resizeRenderFrame = requestAnimationFrame(() => {
+        updateCompactTaskLayouts();
+      });
+    });
+
+    window.addEventListener("beforeprint", updateCompactTaskLayouts);
+    window.addEventListener("afterprint", updateCompactTaskLayouts);
 
     function buildCalendarShell() {
       const timeColumn = document.createElement("div");
@@ -839,10 +974,15 @@
       for (let hour = 7; hour <= 21; hour += 1) {
         const timeSlot = document.createElement("div");
         timeSlot.className = "time-slot";
+        if (hour === 21) {
+          timeSlot.classList.add("is-end-slot");
+        }
         timeSlot.textContent = formatMinutes(hour * 60);
         timeSlot.style.top = `${((hour * 60 - DAY_START) / TOTAL_MINUTES) * 100}%`;
         timeColumn.appendChild(timeSlot);
       }
+
+      appendHourLines(timeColumn);
 
       weekGrid.appendChild(timeColumn);
 
@@ -852,7 +992,6 @@
         header.style.gridColumn = String(index + 2);
         header.style.gridRow = "1";
         header.innerHTML = `
-          <span class="day-short">${day.short}</span>
           <span class="day-name">${day.label}</span>
           <button class="day-add" type="button" aria-label="Aufgabe für ${day.label} hinzufügen">+</button>
         `;
@@ -867,6 +1006,8 @@
         track.className = "day-track";
         track.dataset.day = day.id;
         track.style.gridColumn = String(index + 2);
+
+        appendHourLines(track);
 
         track.addEventListener("dblclick", (event) => {
           if (event.target !== track) {
@@ -888,23 +1029,271 @@
         weekGrid.appendChild(track);
       });
 
-      taskDayInput.innerHTML = DAYS.map((day) => (
-        `<option value="${day.id}">${day.label}</option>`
+      dayPicker.innerHTML = DAYS.map((day) => (
+        `<button class="button secondary day-pill" type="button" data-day="${day.id}" aria-pressed="false">${day.label}</button>`
       )).join("");
+
+      dayPicker.querySelectorAll(".day-pill").forEach((button) => {
+        button.addEventListener("click", () => {
+          toggleSelectedDay(button.dataset.day);
+        });
+      });
+
+      setSelectedDays([DAYS[0].id]);
+    }
+
+    function appendHourLines(container) {
+      for (let hour = 8; hour < 21; hour += 1) {
+        const line = document.createElement("div");
+        line.className = "hour-line";
+        line.style.top = `${((hour * 60 - DAY_START) / TOTAL_MINUTES) * 100}%`;
+        container.appendChild(line);
+      }
     }
 
     function loadTasks() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
         const parsed = raw ? JSON.parse(raw) : [];
-        return Array.isArray(parsed) ? parsed : [];
+        const storedTasks = Array.isArray(parsed) ? parsed : parsed?.tasks;
+        return normalizeTasks(storedTasks);
       } catch (error) {
         return [];
       }
     }
 
     function persistTasks() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          version: STORAGE_VERSION,
+          updatedAt: new Date().toISOString(),
+          tasks
+        }));
+      } catch (error) {
+        // Ignore storage errors so the planner remains usable.
+      }
+    }
+
+    function normalizeTasks(rawTasks) {
+      if (!Array.isArray(rawTasks)) {
+        return [];
+      }
+
+      return rawTasks
+        .map((task) => normalizeTask(task))
+        .filter(Boolean);
+    }
+
+    function normalizeTask(task) {
+      if (!task || typeof task !== "object") {
+        return null;
+      }
+
+      const rawDays = Array.isArray(task.days)
+        ? task.days
+        : (typeof task.day === "string" && task.day ? [task.day] : []);
+      const days = DAYS
+        .map((dayRecord) => dayRecord.id)
+        .filter((dayId, index, allDays) => rawDays.includes(dayId) && allDays.indexOf(dayId) === index);
+      const start = typeof task.start === "string" ? task.start : "";
+      const end = typeof task.end === "string" ? task.end : "";
+      const title = typeof task.title === "string" ? task.title.trim() : "";
+      const color = String(task.color || "1");
+      const startMinutes = timeToMinutes(start);
+      const endMinutes = timeToMinutes(end);
+
+      if (!days.length) {
+        return null;
+      }
+
+      if (Number.isNaN(startMinutes) || Number.isNaN(endMinutes)) {
+        return null;
+      }
+
+      if (startMinutes < DAY_START || endMinutes > DAY_END || endMinutes <= startMinutes) {
+        return null;
+      }
+
+      return {
+        id: task.id ? String(task.id) : createId(),
+        title: title || "Unbenannte Aufgabe",
+        days,
+        start: formatMinutes(startMinutes),
+        end: formatMinutes(endMinutes),
+        color: ["1", "2", "3", "4", "5"].includes(color) ? color : "1"
+      };
+    }
+
+    function getOrderedDayIds(dayIds) {
+      const selectedDaySet = new Set(dayIds);
+      return DAYS
+        .map((day) => day.id)
+        .filter((dayId) => selectedDaySet.has(dayId));
+    }
+
+    function getSelectedDays() {
+      return Array.from(dayPicker.querySelectorAll(".day-pill.is-active"), (button) => button.dataset.day);
+    }
+
+    function setSelectedDays(dayIds) {
+      const orderedDays = getOrderedDayIds(dayIds);
+
+      dayPicker.querySelectorAll(".day-pill").forEach((button) => {
+        const isActive = orderedDays.includes(button.dataset.day);
+        button.classList.toggle("is-active", isActive);
+        button.setAttribute("aria-pressed", String(isActive));
+      });
+    }
+
+    function toggleSelectedDay(dayId) {
+      const selectedDays = new Set(getSelectedDays());
+
+      if (selectedDays.has(dayId)) {
+        if (selectedDays.size === 1) {
+          return;
+        }
+
+        selectedDays.delete(dayId);
+      } else {
+        selectedDays.add(dayId);
+      }
+
+      setSelectedDays(Array.from(selectedDays));
+    }
+
+    function resolveTaskDays(task = {}) {
+      const rawDays = Array.isArray(task.days)
+        ? task.days
+        : (typeof task.day === "string" && task.day ? [task.day] : []);
+      const orderedDays = getOrderedDayIds(rawDays);
+
+      return orderedDays.length ? orderedDays : [DAYS[0].id];
+    }
+
+    function toggleHelpPopover() {
+      if (helpPopover.hidden) {
+        openHelpPopover();
+      } else {
+        closeHelpPopover();
+      }
+    }
+
+    function openHelpPopover() {
+      helpPopover.hidden = false;
+      helpButton.setAttribute("aria-expanded", "true");
+    }
+
+    function closeHelpPopover() {
+      helpPopover.hidden = true;
+      helpButton.setAttribute("aria-expanded", "false");
+    }
+
+    async function importTasksFromFile(event) {
+      const [file] = event.target.files || [];
+
+      if (!file) {
+        return;
+      }
+
+      try {
+        const text = await file.text();
+        const parsed = JSON.parse(text);
+        const storedTasks = Array.isArray(parsed) ? parsed : parsed?.tasks;
+
+        if (!Array.isArray(storedTasks)) {
+          throw new Error("Invalid task payload");
+        }
+
+        tasks = normalizeTasks(storedTasks);
+        persistTasks();
+        renderTasks();
+        closeHelpPopover();
+      } catch (error) {
+        window.alert("Die JSON-Datei konnte nicht gelesen werden.");
+      } finally {
+        event.target.value = "";
+      }
+    }
+
+    function exportTasksAsJson() {
+      const payload = {
+        app: "Lernwochenplan Lian & Lean",
+        version: STORAGE_VERSION,
+        exportedAt: new Date().toISOString(),
+        tasks
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const downloadUrl = URL.createObjectURL(blob);
+      const downloadLink = document.createElement("a");
+      const stamp = new Date().toISOString().slice(0, 10);
+
+      downloadLink.href = downloadUrl;
+      downloadLink.download = `lernwochenplan-lian-lean-${stamp}.json`;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      downloadLink.remove();
+      setTimeout(() => URL.revokeObjectURL(downloadUrl), 0);
+    }
+
+    function updateCompactTaskLayouts() {
+      document.querySelectorAll(".task.is-compact").forEach((taskNode) => {
+        applyCompactTaskLayout(taskNode);
+      });
+    }
+
+    function applyCompactTaskLayout(taskNode) {
+      const compactTitle = taskNode.dataset.compactTitle || taskNode.querySelector(".task-compact-title")?.textContent || "";
+      const compactTime = taskNode.dataset.compactTime || taskNode.querySelector(".task-compact-time")?.textContent || "";
+      const compactFontSize = calculateCompactFontSize(taskNode, compactTitle, compactTime);
+
+      taskNode.style.setProperty("--compact-font-size", `${compactFontSize}px`);
+      taskNode.style.setProperty("--compact-gap", `${Math.max(4, Math.round(compactFontSize * 0.5))}px`);
+    }
+
+    function calculateCompactFontSize(taskNode, compactTitle, compactTime) {
+      const taskStyle = getComputedStyle(taskNode);
+      const paddingLeft = parseFloat(taskStyle.paddingLeft) || 0;
+      const paddingRight = parseFloat(taskStyle.paddingRight) || 0;
+      const paddingTop = parseFloat(taskStyle.paddingTop) || 0;
+      const paddingBottom = parseFloat(taskStyle.paddingBottom) || 0;
+      const availableWidth = Math.max(48, taskNode.clientWidth - paddingLeft - paddingRight - 4);
+      const availableHeight = Math.max(8, taskNode.clientHeight - paddingTop - paddingBottom);
+
+      let fontSize = Math.min(COMPACT_MAX_FONT_SIZE, availableHeight * 0.92);
+
+      while (fontSize > COMPACT_MIN_FONT_SIZE) {
+        if (compactLineFits(taskNode, compactTitle, compactTime, availableWidth, availableHeight, fontSize)) {
+          break;
+        }
+
+        fontSize -= 0.25;
+      }
+
+      return Number(Math.max(COMPACT_MIN_FONT_SIZE, fontSize).toFixed(2));
+    }
+
+    function compactLineFits(taskNode, compactTitle, compactTime, availableWidth, availableHeight, fontSize) {
+      if (!compactMeasureContext) {
+        return fontSize <= availableHeight;
+      }
+
+      const fontFamily = getComputedStyle(taskNode).fontFamily;
+      const compactGap = Math.max(4, fontSize * 0.5);
+      const lineHeight = fontSize;
+
+      if (lineHeight > availableHeight) {
+        return false;
+      }
+
+      compactMeasureContext.font = `800 ${fontSize}px ${fontFamily}`;
+      const titleWidth = compactMeasureContext.measureText(compactTitle).width;
+
+      compactMeasureContext.font = `700 ${fontSize * 0.92}px ${fontFamily}`;
+      const timeWidth = compactMeasureContext.measureText(compactTime).width;
+
+      const reservedTitleWidth = Math.min(titleWidth, Math.max(fontSize * 3.4, availableWidth * 0.32));
+
+      return reservedTitleWidth + timeWidth + compactGap <= availableWidth;
     }
 
     function renderTasks() {
@@ -913,7 +1302,7 @@
       DAYS.forEach((day) => {
         const track = document.querySelector(`.day-track[data-day="${day.id}"]`);
         const dayTasks = tasks
-          .filter((task) => task.day === day.id)
+          .filter((task) => Array.isArray(task.days) && task.days.includes(day.id))
           .map((task) => enrichTask(task))
           .sort((a, b) => a.startMinutes - b.startMinutes || a.endMinutes - b.endMinutes);
 
@@ -922,6 +1311,7 @@
         positionedTasks.forEach((task) => {
           const taskNode = document.createElement("button");
           const duration = task.endMinutes - task.startMinutes;
+          const compactTime = `${formatMinutes(task.startMinutes)}-${formatMinutes(task.endMinutes)}`;
 
           taskNode.type = "button";
           taskNode.className = "task";
@@ -933,9 +1323,13 @@
           taskNode.style.background = `var(--task-${task.color || 1})`;
 
           if (duration <= 45) {
+            taskNode.dataset.compactTitle = task.title;
+            taskNode.dataset.compactTime = compactTime;
             taskNode.innerHTML = `
-              <div class="task-compact task-compact-title">${escapeHtml(task.title)}</div>
-              <div class="task-compact task-compact-time">${formatMinutes(task.startMinutes)}-${formatMinutes(task.endMinutes)}</div>
+              <div class="task-compact-row">
+                <span class="task-compact task-compact-title">${escapeHtml(task.title)}</span>
+                <span class="task-compact task-compact-time">${compactTime}</span>
+              </div>
             `;
           } else {
             taskNode.innerHTML = `
@@ -951,6 +1345,10 @@
           });
 
           track.appendChild(taskNode);
+
+          if (duration <= 45) {
+            applyCompactTaskLayout(taskNode);
+          }
         });
       });
     }
@@ -1010,11 +1408,12 @@
     }
 
     function openModal(task = {}) {
+      closeHelpPopover();
       const isEditing = Boolean(task.id);
       dialogTitle.textContent = isEditing ? "Aufgabe bearbeiten" : "Aufgabe hinzufügen";
       taskIdInput.value = task.id || "";
       taskTitleInput.value = task.title || "";
-      taskDayInput.value = task.day || DAYS[0].id;
+      setSelectedDays(resolveTaskDays(task));
       taskColorInput.value = String(task.color || "1");
       taskStartInput.value = task.start || "08:00";
       taskEndInput.value = task.end || "09:00";
@@ -1027,15 +1426,22 @@
     }
 
     function closeModal() {
+      const activeElement = document.activeElement;
+
+      if (activeElement instanceof HTMLElement && modalBackdrop.contains(activeElement)) {
+        activeElement.blur();
+      }
+
       modalBackdrop.classList.remove("open");
       modalBackdrop.setAttribute("aria-hidden", "true");
       taskForm.reset();
+      setSelectedDays([DAYS[0].id]);
       formError.textContent = "";
     }
 
     function saveTaskFromForm() {
       const title = taskTitleInput.value.trim() || "Unbenannte Aufgabe";
-      const day = taskDayInput.value;
+      const days = getSelectedDays();
       const start = taskStartInput.value;
       const end = taskEndInput.value;
       const color = taskColorInput.value;
@@ -1043,8 +1449,8 @@
       const startMinutes = timeToMinutes(start);
       const endMinutes = timeToMinutes(end);
 
-      if (!day) {
-        formError.textContent = "Bitte einen Wochentag auswählen.";
+      if (!days.length) {
+        formError.textContent = "Bitte mindestens einen Wochentag auswählen.";
         return;
       }
 
@@ -1072,7 +1478,7 @@
       const taskRecord = {
         id: existingId || createId(),
         title,
-        day,
+        days,
         start,
         end,
         color
