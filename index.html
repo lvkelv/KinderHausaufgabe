@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lernwochenplan wird geladen</title>
+  <meta http-equiv="refresh" content="0; url=./Kalender.html">
+  <style>
+    :root {
+      color-scheme: light;
+      --bg:
+        radial-gradient(circle at top left, rgba(255, 240, 210, 0.75), transparent 34%),
+        radial-gradient(circle at bottom right, rgba(214, 232, 255, 0.85), transparent 35%),
+        linear-gradient(145deg, #f6f2ea 0%, #eef5ff 48%, #e6eef9 100%);
+      --ink: #16365a;
+      --subtle: #617690;
+      --accent: #145fc9;
+      --panel: rgba(255, 255, 255, 0.94);
+      --border: rgba(73, 103, 141, 0.14);
+      --shadow: 0 22px 44px rgba(19, 48, 83, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      font-family: "Avenir Next", "Trebuchet MS", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+    }
+
+    .card {
+      max-width: 560px;
+      padding: 28px 30px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(1.6rem, 4vw, 2.3rem);
+      letter-spacing: 0.02em;
+    }
+
+    p {
+      margin: 0 0 18px;
+      color: var(--subtle);
+      line-height: 1.5;
+    }
+
+    a {
+      color: white;
+      text-decoration: none;
+      display: inline-block;
+      padding: 12px 18px;
+      background: linear-gradient(135deg, #1774f2, #145fc9);
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>Lernwochenplan</h1>
+    <p>Die Startseite wird auf <code>Kalender.html</code> weitergeleitet.</p>
+    <a href="./Kalender.html">Kalender jetzt öffnen</a>
+  </main>
+  <script>
+    window.location.replace("./Kalender.html");
+  </script>
+</body>
+</html>
