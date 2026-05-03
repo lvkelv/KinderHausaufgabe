@@ -371,12 +371,12 @@
 
     .task-compact {
       position: relative;
+      min-width: 0;
       font-size: inherit;
-      line-height: inherit;
     }
 
     .task.is-compact {
-      justify-content: center;
+      justify-content: flex-start;
       gap: 0;
       padding-top: 2px;
       padding-bottom: 2px;
@@ -384,8 +384,9 @@
 
     .task-compact-row {
       position: relative;
-      display: flex;
-      align-items: center;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: start;
       width: 100%;
       min-width: 0;
       gap: var(--compact-gap, 6px);
@@ -397,22 +398,26 @@
     .task-compact-title,
     .task-compact-time {
       position: relative;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      min-width: 0;
     }
 
     .task-compact-title {
-      flex: 1 1 auto;
-      min-width: 0;
       font-size: 1em;
       font-weight: 800;
+      line-height: 0.94;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
 
     .task-compact-time {
-      flex: 0 0 auto;
-      font-size: 0.92em;
+      align-self: start;
+      justify-self: end;
+      text-align: right;
+      white-space: nowrap;
+      font-size: calc(1em * var(--compact-time-scale, 0.78));
       font-weight: 700;
+      line-height: 0.9;
       opacity: 0.92;
     }
 
@@ -718,7 +723,7 @@
       }
 
       .task {
-        padding: 3px 5px;
+        padding: 2px 4px;
         border-color: rgba(34, 62, 97, 0.22);
         box-shadow: none;
         -webkit-print-color-adjust: exact;
@@ -745,8 +750,8 @@
       }
 
       .task-compact-row {
-        gap: var(--compact-gap, 3px);
-        font-size: var(--compact-font-size, 6.2pt);
+        gap: var(--compact-gap, 2px);
+        font-size: var(--compact-font-size, 5.8pt);
         line-height: 1;
       }
 
@@ -755,7 +760,8 @@
       }
 
       .task-compact-time {
-        font-size: 0.9em;
+        font-size: calc(1em * var(--compact-time-scale, 0.68));
+        line-height: 0.86;
       }
     }
   </style>
@@ -841,8 +847,20 @@
   <script>
     const STORAGE_KEY = "kinder-lernkalender-tasks";
     const STORAGE_VERSION = 1;
-    const COMPACT_MIN_FONT_SIZE = 8;
-    const COMPACT_MAX_FONT_SIZE = 13;
+    const COMPACT_SCREEN_LAYOUT = Object.freeze({
+      minFontSize: 7,
+      maxFontSize: 13,
+      timeScale: 0.78,
+      gapScale: 0.38,
+      minGap: 3
+    });
+    const COMPACT_PRINT_LAYOUT = Object.freeze({
+      minFontSize: 4.8,
+      maxFontSize: 9.5,
+      timeScale: 0.68,
+      gapScale: 0.3,
+      minGap: 2
+    });
     const DAY_START = 7 * 60;
     const DAY_END = 21 * 60;
     const TOTAL_MINUTES = DAY_END - DAY_START;
@@ -875,6 +893,7 @@
     const importFileInput = document.getElementById("importFileInput");
     const compactMeasureContext = document.createElement("canvas").getContext("2d");
     let resizeRenderFrame = 0;
+    let isPrintLayoutActive = false;
 
     let tasks = loadTasks();
 
@@ -964,8 +983,14 @@
       });
     });
 
-    window.addEventListener("beforeprint", updateCompactTaskLayouts);
-    window.addEventListener("afterprint", updateCompactTaskLayouts);
+    window.addEventListener("beforeprint", () => {
+      isPrintLayoutActive = true;
+      updateCompactTaskLayouts();
+    });
+    window.addEventListener("afterprint", () => {
+      isPrintLayoutActive = false;
+      updateCompactTaskLayouts();
+    });
 
     function buildCalendarShell() {
       const timeColumn = document.createElement("div");
@@ -1244,13 +1269,19 @@
     function applyCompactTaskLayout(taskNode) {
       const compactTitle = taskNode.dataset.compactTitle || taskNode.querySelector(".task-compact-title")?.textContent || "";
       const compactTime = taskNode.dataset.compactTime || taskNode.querySelector(".task-compact-time")?.textContent || "";
-      const compactFontSize = calculateCompactFontSize(taskNode, compactTitle, compactTime);
+      const layoutSettings = getCompactLayoutSettings();
+      const compactFontSize = calculateCompactFontSize(taskNode, compactTitle, compactTime, layoutSettings);
 
       taskNode.style.setProperty("--compact-font-size", `${compactFontSize}px`);
-      taskNode.style.setProperty("--compact-gap", `${Math.max(4, Math.round(compactFontSize * 0.5))}px`);
+      taskNode.style.setProperty("--compact-gap", `${Math.max(layoutSettings.minGap, compactFontSize * layoutSettings.gapScale).toFixed(2)}px`);
+      taskNode.style.setProperty("--compact-time-scale", String(layoutSettings.timeScale));
     }
 
-    function calculateCompactFontSize(taskNode, compactTitle, compactTime) {
+    function getCompactLayoutSettings() {
+      return isPrintLayoutActive ? COMPACT_PRINT_LAYOUT : COMPACT_SCREEN_LAYOUT;
+    }
+
+    function calculateCompactFontSize(taskNode, compactTitle, compactTime, layoutSettings) {
       const taskStyle = getComputedStyle(taskNode);
       const paddingLeft = parseFloat(taskStyle.paddingLeft) || 0;
       const paddingRight = parseFloat(taskStyle.paddingRight) || 0;
@@ -1259,41 +1290,96 @@
       const availableWidth = Math.max(48, taskNode.clientWidth - paddingLeft - paddingRight - 4);
       const availableHeight = Math.max(8, taskNode.clientHeight - paddingTop - paddingBottom);
 
-      let fontSize = Math.min(COMPACT_MAX_FONT_SIZE, availableHeight * 0.92);
+      let fontSize = Math.min(layoutSettings.maxFontSize, availableHeight * 0.96);
 
-      while (fontSize > COMPACT_MIN_FONT_SIZE) {
-        if (compactLineFits(taskNode, compactTitle, compactTime, availableWidth, availableHeight, fontSize)) {
+      while (fontSize > layoutSettings.minFontSize) {
+        if (compactLineFits(taskNode, compactTitle, compactTime, availableWidth, availableHeight, fontSize, layoutSettings)) {
           break;
         }
 
         fontSize -= 0.25;
       }
 
-      return Number(Math.max(COMPACT_MIN_FONT_SIZE, fontSize).toFixed(2));
+      return Number(Math.max(layoutSettings.minFontSize, fontSize).toFixed(2));
     }
 
-    function compactLineFits(taskNode, compactTitle, compactTime, availableWidth, availableHeight, fontSize) {
+    function compactLineFits(taskNode, compactTitle, compactTime, availableWidth, availableHeight, fontSize, layoutSettings) {
       if (!compactMeasureContext) {
         return fontSize <= availableHeight;
       }
 
       const fontFamily = getComputedStyle(taskNode).fontFamily;
-      const compactGap = Math.max(4, fontSize * 0.5);
-      const lineHeight = fontSize;
+      const compactGap = Math.max(layoutSettings.minGap, fontSize * layoutSettings.gapScale);
+      const timeFontSize = Math.max(layoutSettings.minFontSize * layoutSettings.timeScale, fontSize * layoutSettings.timeScale);
+      const titleLineHeight = fontSize * 0.94;
+      const timeLineHeight = timeFontSize * 0.9;
 
-      if (lineHeight > availableHeight) {
+      if (Math.max(titleLineHeight, timeLineHeight) > availableHeight) {
         return false;
       }
 
-      compactMeasureContext.font = `800 ${fontSize}px ${fontFamily}`;
-      const titleWidth = compactMeasureContext.measureText(compactTitle).width;
-
-      compactMeasureContext.font = `700 ${fontSize * 0.92}px ${fontFamily}`;
+      compactMeasureContext.font = `700 ${timeFontSize}px ${fontFamily}`;
       const timeWidth = compactMeasureContext.measureText(compactTime).width;
+      const titleWidth = Math.max(fontSize * 1.5, availableWidth - timeWidth - compactGap);
 
-      const reservedTitleWidth = Math.min(titleWidth, Math.max(fontSize * 3.4, availableWidth * 0.32));
+      if (titleWidth <= fontSize * 1.1) {
+        return false;
+      }
 
-      return reservedTitleWidth + timeWidth + compactGap <= availableWidth;
+      const titleLines = measureWrappedLineCount(compactTitle, titleWidth, fontFamily, fontSize, 800);
+
+      return Math.max(titleLines * titleLineHeight, timeLineHeight) <= availableHeight + 0.4;
+    }
+
+    function measureWrappedLineCount(text, maxWidth, fontFamily, fontSize, fontWeight = 800) {
+      if (!compactMeasureContext) {
+        return 1;
+      }
+
+      const normalizedText = String(text || "").replace(/\s+/g, " ").trim();
+
+      if (!normalizedText) {
+        return 1;
+      }
+
+      compactMeasureContext.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
+
+      const words = normalizedText.split(" ");
+      let lines = 1;
+      let currentLine = "";
+
+      words.forEach((word) => {
+        const candidate = currentLine ? `${currentLine} ${word}` : word;
+
+        if (compactMeasureContext.measureText(candidate).width <= maxWidth) {
+          currentLine = candidate;
+          return;
+        }
+
+        if (currentLine) {
+          lines += 1;
+          currentLine = "";
+        }
+
+        if (compactMeasureContext.measureText(word).width <= maxWidth) {
+          currentLine = word;
+          return;
+        }
+
+        for (const character of word) {
+          const segment = `${currentLine}${character}`;
+
+          if (currentLine && compactMeasureContext.measureText(segment).width > maxWidth) {
+            lines += 1;
+            currentLine = character;
+            continue;
+          }
+
+          currentLine = segment;
+        }
+      });
+
+      return lines;
     }
 
     function renderTasks() {
