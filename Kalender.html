@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lernwochenplan</title>
+  <style>
+    :root {
+      --time-width: 96px;
+      --header-height: 96px;
+      --hour-height: 58px;
+      --day-height: calc(var(--hour-height) * 14);
+      --page-bg:
+        radial-gradient(circle at top left, rgba(255, 243, 214, 0.75), transparent 32%),
+        radial-gradient(circle at bottom right, rgba(209, 230, 255, 0.85), transparent 34%),
+        linear-gradient(145deg, #f5f1e8 0%, #eef5ff 45%, #e8f0fb 100%);
+      --paper:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(246, 250, 255, 0.95));
+      --panel-border: rgba(73, 103, 141, 0.2);
+      --line-color: rgba(112, 140, 175, 0.24);
+      --line-strong: rgba(112, 140, 175, 0.34);
+      --ink: #16365a;
+      --subtle: #5e748f;
+      --accent: #145fc9;
+      --accent-soft: #dce9ff;
+      --task-1: #f6cb62;
+      --task-2: #86d4c0;
+      --task-3: #f2a89a;
+      --task-4: #9fc0ff;
+      --task-5: #c8b2f7;
+      --shadow: 0 22px 48px rgba(19, 48, 83, 0.13);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      font-family: "Avenir Next", "Trebuchet MS", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--page-bg);
+    }
+
+    body {
+      padding: 26px;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    code {
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: rgba(20, 95, 201, 0.09);
+      color: var(--accent);
+      font-family: "Consolas", "SFMono-Regular", monospace;
+      font-size: 0.92em;
+    }
+
+    .app {
+      max-width: 1650px;
+      margin: 0 auto;
+      padding: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.72);
+      border-radius: 30px;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .title-block h1 {
+      margin: 0 0 6px;
+      font-size: clamp(1.9rem, 3vw, 3rem);
+      letter-spacing: 0.02em;
+    }
+
+    .title-block p {
+      margin: 0;
+      max-width: 760px;
+      color: var(--subtle);
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .button {
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 19px;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+
+    .button:hover {
+      transform: translateY(-1px);
+    }
+
+    .button.primary {
+      color: white;
+      background: linear-gradient(135deg, #1774f2, #145fc9);
+      box-shadow: 0 12px 24px rgba(20, 95, 201, 0.21);
+    }
+
+    .button.secondary {
+      color: var(--ink);
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(73, 103, 141, 0.16);
+      box-shadow: 0 10px 18px rgba(38, 59, 87, 0.08);
+    }
+
+    .tip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+      padding: 13px 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(73, 103, 141, 0.12);
+      background: rgba(255, 255, 255, 0.7);
+      color: var(--subtle);
+      font-size: 0.95rem;
+    }
+
+    .tip strong {
+      color: var(--ink);
+    }
+
+    .calendar {
+      border-radius: 26px;
+      border: 1px solid var(--panel-border);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 251, 255, 0.97)),
+        linear-gradient(90deg, rgba(23, 68, 117, 0.02), transparent 14%, transparent 86%, rgba(23, 68, 117, 0.02));
+      overflow-x: auto;
+      overflow-y: visible;
+    }
+
+    .week-grid {
+      min-width: 1160px;
+      display: grid;
+      grid-template-columns: var(--time-width) repeat(7, minmax(152px, 1fr));
+      grid-template-rows: var(--header-height) var(--day-height);
+    }
+
+    .corner {
+      grid-column: 1;
+      grid-row: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-right: 1px solid var(--panel-border);
+      border-bottom: 1px solid var(--panel-border);
+      background:
+        radial-gradient(circle at 20% 18%, rgba(20, 95, 201, 0.09), transparent 34%),
+        linear-gradient(180deg, rgba(245, 249, 255, 0.96), rgba(250, 252, 255, 0.98));
+      font-size: 0.88rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--subtle);
+    }
+
+    .day-header {
+      position: relative;
+      padding: 16px 16px 14px;
+      border-bottom: 1px solid var(--panel-border);
+      border-right: 1px solid var(--panel-border);
+      background:
+        linear-gradient(180deg, rgba(247, 250, 255, 0.94), rgba(255, 255, 255, 0.98));
+    }
+
+    .day-header:last-of-type {
+      border-right: 0;
+    }
+
+    .day-short {
+      display: inline-block;
+      margin-bottom: 8px;
+      padding: 4px 8px;
+      background: rgba(20, 95, 201, 0.08);
+      color: var(--accent);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .day-name {
+      display: block;
+      font-size: 1.08rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+
+    .day-add {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      border-radius: 50%;
+      border: 0;
+      cursor: pointer;
+      color: var(--accent);
+      background: var(--accent-soft);
+      font-size: 1.35rem;
+      line-height: 1;
+      box-shadow: inset 0 0 0 1px rgba(20, 95, 201, 0.06);
+    }
+
+    .time-column {
+      position: relative;
+      grid-column: 1;
+      grid-row: 2;
+      overflow: visible;
+      z-index: 3;
+      border-right: 1px solid var(--panel-border);
+      background:
+        repeating-linear-gradient(
+          to bottom,
+          rgba(246, 249, 255, 0.96) 0,
+          rgba(246, 249, 255, 0.96) calc(var(--hour-height) - 1px),
+          var(--line-color) calc(var(--hour-height) - 1px),
+          var(--line-color) var(--hour-height)
+        );
+    }
+
+    .time-slot {
+      position: absolute;
+      right: 12px;
+      transform: translateY(-50%);
+      padding: 0 2px;
+      background: rgba(246, 249, 255, 0.96);
+      color: var(--subtle);
+      font-size: 0.84rem;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: 0.03em;
+      font-variant-numeric: tabular-nums;
+      z-index: 2;
+    }
+
+    .day-track {
+      position: relative;
+      grid-row: 2;
+      border-right: 1px solid var(--panel-border);
+      background:
+        repeating-linear-gradient(
+          to bottom,
+          rgba(255, 255, 255, 0.96) 0,
+          rgba(255, 255, 255, 0.96) calc(var(--hour-height) - 1px),
+          var(--line-strong) calc(var(--hour-height) - 1px),
+          var(--line-strong) var(--hour-height)
+        );
+      cursor: crosshair;
+    }
+
+    .day-track:last-child {
+      border-right: 0;
+    }
+
+    .day-track::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(180deg, rgba(20, 95, 201, 0.025), transparent 12%, transparent 88%, rgba(20, 95, 201, 0.025)),
+        linear-gradient(90deg, rgba(20, 95, 201, 0.03), transparent 24%, transparent 76%, rgba(20, 95, 201, 0.03));
+      pointer-events: none;
+    }
+
+    .task {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: 2px;
+      padding: 6px 8px;
+      appearance: none;
+      border-radius: 0;
+      overflow: hidden;
+      cursor: pointer;
+      border: 1px solid rgba(22, 54, 90, 0.12);
+      box-shadow: 0 10px 18px rgba(22, 54, 90, 0.08);
+      color: #133451;
+      text-align: left;
+    }
+
+    .task::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: rgba(22, 54, 90, 0.18);
+    }
+
+    .task-title {
+      position: relative;
+      font-weight: 800;
+      font-size: 0.84rem;
+      line-height: 1.18;
+      margin: 0;
+      padding-left: 2px;
+    }
+
+    .task-time {
+      position: relative;
+      font-size: 0.72rem;
+      line-height: 1.1;
+      opacity: 0.9;
+      padding-left: 2px;
+    }
+
+    .task-compact {
+      position: relative;
+      padding-left: 2px;
+      font-size: 0.73rem;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+
+    .task.is-compact {
+      justify-content: center;
+      gap: 1px;
+      padding-top: 3px;
+      padding-bottom: 3px;
+    }
+
+    .task-compact-title,
+    .task-compact-time {
+      position: relative;
+      padding-left: 2px;
+      line-height: 1.05;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .task-compact-title {
+      font-size: 0.74rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .task-compact-time {
+      font-size: 0.68rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .task:focus-visible,
+    .day-add:focus-visible,
+    .button:focus-visible {
+      outline: 2px solid rgba(20, 95, 201, 0.5);
+      outline-offset: 2px;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(15, 27, 42, 0.48);
+      z-index: 30;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal {
+      width: min(520px, 100%);
+      padding: 24px;
+      border-radius: 26px;
+      background: white;
+      box-shadow: 0 28px 70px rgba(15, 27, 42, 0.3);
+    }
+
+    .modal h2 {
+      margin: 0 0 16px;
+      font-size: 1.4rem;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
+    }
+
+    .field label {
+      font-weight: 700;
+      font-size: 0.92rem;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      padding: 11px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(73, 103, 141, 0.18);
+      background: #fbfdff;
+      color: var(--ink);
+    }
+
+    .modal-note,
+    .error {
+      margin-top: 12px;
+      font-size: 0.9rem;
+    }
+
+    .modal-note {
+      color: var(--subtle);
+    }
+
+    .error {
+      min-height: 1.2em;
+      color: #c33149;
+      font-weight: 700;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .modal-actions .right {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .button.danger {
+      color: white;
+      background: linear-gradient(135deg, #df445e, #bc2540);
+      box-shadow: 0 12px 24px rgba(188, 37, 64, 0.18);
+    }
+
+    .button.ghost {
+      background: #f1f5fb;
+      color: var(--ink);
+      box-shadow: none;
+    }
+
+    @media (max-width: 980px) {
+      body {
+        padding: 12px;
+      }
+
+      .app {
+        padding: 18px;
+        border-radius: 24px;
+      }
+
+      .topbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .actions {
+        justify-content: flex-start;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .modal-actions {
+        flex-direction: column-reverse;
+      }
+
+      .modal-actions .right {
+        justify-content: stretch;
+      }
+
+      .modal-actions .right .button,
+      .modal-actions > .button {
+        width: 100%;
+      }
+    }
+
+    @page {
+      size: A4 landscape;
+      margin: 7mm;
+    }
+
+    @media print {
+      :root {
+        --time-width: 74px;
+        --header-height: 68px;
+        --hour-height: 45px;
+      }
+
+      html,
+      body {
+        background: white;
+      }
+
+      body {
+        padding: 0;
+      }
+
+      .app {
+        max-width: none;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: white;
+        box-shadow: none;
+      }
+
+      .actions,
+      .tip,
+      .modal-backdrop {
+        display: none !important;
+      }
+
+      .topbar {
+        align-items: flex-end;
+        margin-bottom: 8px;
+        padding: 0 0 8px;
+        border-bottom: 2px solid #365c86;
+      }
+
+      .title-block h1 {
+        margin-bottom: 2px;
+        font-size: 1.42rem;
+        letter-spacing: 0.04em;
+      }
+
+      .title-block p {
+        max-width: none;
+        font-size: 0.78rem;
+        line-height: 1.35;
+        color: #44617f;
+      }
+
+      .calendar {
+        overflow: visible;
+        border-radius: 0;
+        border: 1px solid #8ea3bb;
+        background: white;
+      }
+
+      .week-grid {
+        min-width: auto;
+        width: 100%;
+        grid-template-columns: var(--time-width) repeat(7, minmax(0, 1fr));
+        break-inside: avoid;
+      }
+
+      .corner {
+        background: #eff4fa;
+        border-right-color: #9bb0c5;
+        border-bottom-color: #9bb0c5;
+        font-size: 0.68rem;
+      }
+
+      .day-header {
+        padding: 10px 10px 8px;
+        background: #eff4fa;
+        border-right-color: #9bb0c5;
+        border-bottom-color: #9bb0c5;
+      }
+
+      .day-short {
+        margin-bottom: 6px;
+        padding: 2px 5px;
+        font-size: 0.54rem;
+        background: #dbe8f7;
+      }
+
+      .day-name {
+        font-size: 0.92rem;
+      }
+
+      .day-add {
+        display: none;
+      }
+
+      .time-column {
+        background:
+          repeating-linear-gradient(
+            to bottom,
+            #f8fbff 0,
+            #f8fbff calc(var(--hour-height) - 1px),
+            #a9b9cb calc(var(--hour-height) - 1px),
+            #a9b9cb var(--hour-height)
+          );
+        border-right-color: #9bb0c5;
+      }
+
+      .time-slot {
+        right: 8px;
+        padding: 0 1px;
+        background: #f8fbff;
+        color: #4d6784;
+        font-size: 7.4pt;
+      }
+
+      .day-track {
+        background:
+          repeating-linear-gradient(
+            to bottom,
+            white 0,
+            white calc(var(--hour-height) - 1px),
+            #a9b9cb calc(var(--hour-height) - 1px),
+            #a9b9cb var(--hour-height)
+          );
+        border-right-color: #9bb0c5;
+      }
+
+      .day-track::before {
+        background: linear-gradient(90deg, rgba(28, 67, 112, 0.022), transparent 18%, transparent 82%, rgba(28, 67, 112, 0.022));
+      }
+
+      .task {
+        padding: 3px 5px;
+        border-color: rgba(34, 62, 97, 0.22);
+        box-shadow: none;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .task::before {
+        width: 2px;
+      }
+
+      .task-title {
+        font-size: 7.7pt;
+        line-height: 1.05;
+      }
+
+      .task-time {
+        font-size: 6.4pt;
+        line-height: 1.02;
+      }
+
+      .task-compact {
+        font-size: 6.2pt;
+        line-height: 1.05;
+      }
+
+      .task-compact-title {
+        font-size: 6.4pt;
+      }
+
+      .task-compact-time {
+        font-size: 5.9pt;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="title-block">
+        <h1>Lernwochenplan</h1>
+        <p>Wochenübersicht von 07:00 bis 21:00. Aufgaben lassen sich minutengenau eintragen, per Doppelklick bearbeiten und als A4-Querformat drucken.</p>
+      </div>
+      <div class="actions">
+        <button class="button primary" id="addTaskButton" type="button">Aufgabe hinzufügen</button>
+        <button class="button secondary" id="printButton" type="button">A4 drucken</button>
+      </div>
+    </div>
+
+    <div class="tip">
+      <strong>Hinweis:</strong>
+      <span>Mit <code>+</code> wird eine neue Aufgabe angelegt. Ein Doppelklick auf einen Termin öffnet die Bearbeitung.</span>
+    </div>
+
+    <div class="calendar">
+      <div class="week-grid" id="weekGrid">
+        <div class="corner">Zeit</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="modalBackdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
+      <h2 id="dialogTitle">Aufgabe hinzufügen</h2>
+      <form id="taskForm">
+        <input id="taskId" type="hidden">
+        <div class="form-grid">
+          <div class="field full">
+            <label for="taskTitle">Titel</label>
+            <input id="taskTitle" name="taskTitle" type="text" maxlength="80" placeholder="Zum Beispiel: Lesen, Mathematik, Klavier">
+          </div>
+          <div class="field">
+            <label for="taskDay">Wochentag</label>
+            <select id="taskDay" name="taskDay"></select>
+          </div>
+          <div class="field">
+            <label for="taskColor">Farbe</label>
+            <select id="taskColor" name="taskColor">
+              <option value="1">Gold</option>
+              <option value="2">Mint</option>
+              <option value="3">Koralle</option>
+              <option value="4">Blau</option>
+              <option value="5">Lavendel</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="taskStart">Beginn</label>
+            <input id="taskStart" name="taskStart" type="time" min="07:00" max="21:00" step="60" required>
+          </div>
+          <div class="field">
+            <label for="taskEnd">Ende</label>
+            <input id="taskEnd" name="taskEnd" type="time" min="07:00" max="21:00" step="60" required>
+          </div>
+        </div>
+        <div class="modal-note">Die Uhrzeiten können minutengenau eingetragen werden, zum Beispiel <code>08:40</code> bis <code>09:10</code>.</div>
+        <div class="error" id="formError" aria-live="polite"></div>
+        <div class="modal-actions">
+          <button class="button ghost" id="cancelButton" type="button">Abbrechen</button>
+          <div class="right">
+            <button class="button danger" id="deleteButton" type="button" hidden>Aufgabe löschen</button>
+            <button class="button primary" type="submit">Speichern</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "kinder-lernkalender-tasks";
+    const DAY_START = 7 * 60;
+    const DAY_END = 21 * 60;
+    const TOTAL_MINUTES = DAY_END - DAY_START;
+    const DAYS = [
+      { id: "monday", short: "Mo", label: "Montag" },
+      { id: "tuesday", short: "Di", label: "Dienstag" },
+      { id: "wednesday", short: "Mi", label: "Mittwoch" },
+      { id: "thursday", short: "Do", label: "Donnerstag" },
+      { id: "friday", short: "Fr", label: "Freitag" },
+      { id: "saturday", short: "Sa", label: "Samstag" },
+      { id: "sunday", short: "So", label: "Sonntag" }
+    ];
+
+    const weekGrid = document.getElementById("weekGrid");
+    const modalBackdrop = document.getElementById("modalBackdrop");
+    const taskForm = document.getElementById("taskForm");
+    const dialogTitle = document.getElementById("dialogTitle");
+    const taskIdInput = document.getElementById("taskId");
+    const taskTitleInput = document.getElementById("taskTitle");
+    const taskDayInput = document.getElementById("taskDay");
+    const taskColorInput = document.getElementById("taskColor");
+    const taskStartInput = document.getElementById("taskStart");
+    const taskEndInput = document.getElementById("taskEnd");
+    const formError = document.getElementById("formError");
+    const deleteButton = document.getElementById("deleteButton");
+
+    let tasks = loadTasks();
+
+    buildCalendarShell();
+    renderTasks();
+
+    document.getElementById("addTaskButton").addEventListener("click", () => {
+      openModal();
+    });
+
+    document.getElementById("printButton").addEventListener("click", () => {
+      window.print();
+    });
+
+    document.getElementById("cancelButton").addEventListener("click", closeModal);
+
+    modalBackdrop.addEventListener("click", (event) => {
+      if (event.target === modalBackdrop) {
+        closeModal();
+      }
+    });
+
+    deleteButton.addEventListener("click", () => {
+      const taskId = taskIdInput.value;
+      if (!taskId) {
+        return;
+      }
+
+      tasks = tasks.filter((task) => task.id !== taskId);
+      persistTasks();
+      renderTasks();
+      closeModal();
+    });
+
+    taskForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      saveTaskFromForm();
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && modalBackdrop.classList.contains("open")) {
+        closeModal();
+      }
+    });
+
+    function buildCalendarShell() {
+      const timeColumn = document.createElement("div");
+      timeColumn.className = "time-column";
+
+      for (let hour = 7; hour <= 21; hour += 1) {
+        const timeSlot = document.createElement("div");
+        timeSlot.className = "time-slot";
+        timeSlot.textContent = formatMinutes(hour * 60);
+        timeSlot.style.top = `${((hour * 60 - DAY_START) / TOTAL_MINUTES) * 100}%`;
+        timeColumn.appendChild(timeSlot);
+      }
+
+      weekGrid.appendChild(timeColumn);
+
+      DAYS.forEach((day, index) => {
+        const header = document.createElement("div");
+        header.className = "day-header";
+        header.style.gridColumn = String(index + 2);
+        header.style.gridRow = "1";
+        header.innerHTML = `
+          <span class="day-short">${day.short}</span>
+          <span class="day-name">${day.label}</span>
+          <button class="day-add" type="button" aria-label="Aufgabe für ${day.label} hinzufügen">+</button>
+        `;
+
+        header.querySelector(".day-add").addEventListener("click", () => {
+          openModal({ day: day.id });
+        });
+
+        weekGrid.appendChild(header);
+
+        const track = document.createElement("div");
+        track.className = "day-track";
+        track.dataset.day = day.id;
+        track.style.gridColumn = String(index + 2);
+
+        track.addEventListener("dblclick", (event) => {
+          if (event.target !== track) {
+            return;
+          }
+
+          const bounds = track.getBoundingClientRect();
+          const minutesFromTop = ((event.clientY - bounds.top) / bounds.height) * TOTAL_MINUTES;
+          const snappedStart = snapToFiveMinutes(DAY_START + minutesFromTop);
+          const snappedEnd = Math.min(snappedStart + 30, DAY_END);
+
+          openModal({
+            day: day.id,
+            start: formatMinutes(snappedStart),
+            end: formatMinutes(snappedEnd)
+          });
+        });
+
+        weekGrid.appendChild(track);
+      });
+
+      taskDayInput.innerHTML = DAYS.map((day) => (
+        `<option value="${day.id}">${day.label}</option>`
+      )).join("");
+    }
+
+    function loadTasks() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (error) {
+        return [];
+      }
+    }
+
+    function persistTasks() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+    }
+
+    function renderTasks() {
+      document.querySelectorAll(".task").forEach((node) => node.remove());
+
+      DAYS.forEach((day) => {
+        const track = document.querySelector(`.day-track[data-day="${day.id}"]`);
+        const dayTasks = tasks
+          .filter((task) => task.day === day.id)
+          .map((task) => enrichTask(task))
+          .sort((a, b) => a.startMinutes - b.startMinutes || a.endMinutes - b.endMinutes);
+
+        const positionedTasks = buildOverlappingLayout(dayTasks);
+
+        positionedTasks.forEach((task) => {
+          const taskNode = document.createElement("button");
+          const duration = task.endMinutes - task.startMinutes;
+
+          taskNode.type = "button";
+          taskNode.className = "task";
+          taskNode.classList.toggle("is-compact", duration <= 45);
+          taskNode.style.top = `${((task.startMinutes - DAY_START) / TOTAL_MINUTES) * 100}%`;
+          taskNode.style.height = `${((task.endMinutes - task.startMinutes) / TOTAL_MINUTES) * 100}%`;
+          taskNode.style.left = `calc(${task.column * task.width}% + 3px)`;
+          taskNode.style.width = `calc(${task.width}% - 6px)`;
+          taskNode.style.background = `var(--task-${task.color || 1})`;
+
+          if (duration <= 45) {
+            taskNode.innerHTML = `
+              <div class="task-compact task-compact-title">${escapeHtml(task.title)}</div>
+              <div class="task-compact task-compact-time">${formatMinutes(task.startMinutes)}-${formatMinutes(task.endMinutes)}</div>
+            `;
+          } else {
+            taskNode.innerHTML = `
+              <div class="task-title">${escapeHtml(task.title)}</div>
+              <div class="task-time">${formatMinutes(task.startMinutes)} - ${formatMinutes(task.endMinutes)}</div>
+            `;
+          }
+
+          taskNode.addEventListener("dblclick", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            openModal(task);
+          });
+
+          track.appendChild(taskNode);
+        });
+      });
+    }
+
+    function buildOverlappingLayout(dayTasks) {
+      const clusters = [];
+      let currentCluster = [];
+      let clusterEnd = -Infinity;
+
+      dayTasks.forEach((task) => {
+        if (!currentCluster.length || task.startMinutes < clusterEnd) {
+          currentCluster.push(task);
+          clusterEnd = Math.max(clusterEnd, task.endMinutes);
+          return;
+        }
+
+        clusters.push(currentCluster);
+        currentCluster = [task];
+        clusterEnd = task.endMinutes;
+      });
+
+      if (currentCluster.length) {
+        clusters.push(currentCluster);
+      }
+
+      return clusters.flatMap((cluster) => {
+        const columnEnds = [];
+        let maxColumns = 0;
+
+        cluster.forEach((task) => {
+          let assignedColumn = columnEnds.findIndex((endMinutes) => endMinutes <= task.startMinutes);
+          if (assignedColumn === -1) {
+            assignedColumn = columnEnds.length;
+            columnEnds.push(task.endMinutes);
+          } else {
+            columnEnds[assignedColumn] = task.endMinutes;
+          }
+
+          task.column = assignedColumn;
+          maxColumns = Math.max(maxColumns, columnEnds.length);
+        });
+
+        return cluster.map((task) => ({
+          ...task,
+          width: 100 / maxColumns
+        }));
+      });
+    }
+
+    function enrichTask(task) {
+      return {
+        ...task,
+        color: String(task.color || "1"),
+        startMinutes: timeToMinutes(task.start),
+        endMinutes: timeToMinutes(task.end)
+      };
+    }
+
+    function openModal(task = {}) {
+      const isEditing = Boolean(task.id);
+      dialogTitle.textContent = isEditing ? "Aufgabe bearbeiten" : "Aufgabe hinzufügen";
+      taskIdInput.value = task.id || "";
+      taskTitleInput.value = task.title || "";
+      taskDayInput.value = task.day || DAYS[0].id;
+      taskColorInput.value = String(task.color || "1");
+      taskStartInput.value = task.start || "08:00";
+      taskEndInput.value = task.end || "09:00";
+      deleteButton.hidden = !isEditing;
+      formError.textContent = "";
+      modalBackdrop.classList.add("open");
+      modalBackdrop.setAttribute("aria-hidden", "false");
+      taskTitleInput.focus();
+      taskTitleInput.select();
+    }
+
+    function closeModal() {
+      modalBackdrop.classList.remove("open");
+      modalBackdrop.setAttribute("aria-hidden", "true");
+      taskForm.reset();
+      formError.textContent = "";
+    }
+
+    function saveTaskFromForm() {
+      const title = taskTitleInput.value.trim() || "Unbenannte Aufgabe";
+      const day = taskDayInput.value;
+      const start = taskStartInput.value;
+      const end = taskEndInput.value;
+      const color = taskColorInput.value;
+
+      const startMinutes = timeToMinutes(start);
+      const endMinutes = timeToMinutes(end);
+
+      if (!day) {
+        formError.textContent = "Bitte einen Wochentag auswählen.";
+        return;
+      }
+
+      if (!start || !end) {
+        formError.textContent = "Bitte Beginn und Ende eintragen.";
+        return;
+      }
+
+      if (Number.isNaN(startMinutes) || Number.isNaN(endMinutes)) {
+        formError.textContent = "Das Zeitformat ist ungültig.";
+        return;
+      }
+
+      if (startMinutes < DAY_START || endMinutes > DAY_END) {
+        formError.textContent = "Der Zeitraum muss zwischen 07:00 und 21:00 liegen.";
+        return;
+      }
+
+      if (endMinutes <= startMinutes) {
+        formError.textContent = "Die Endzeit muss nach der Startzeit liegen.";
+        return;
+      }
+
+      const existingId = taskIdInput.value;
+      const taskRecord = {
+        id: existingId || createId(),
+        title,
+        day,
+        start,
+        end,
+        color
+      };
+
+      if (existingId) {
+        tasks = tasks.map((task) => task.id === existingId ? taskRecord : task);
+      } else {
+        tasks = [...tasks, taskRecord];
+      }
+
+      persistTasks();
+      renderTasks();
+      closeModal();
+    }
+
+    function timeToMinutes(timeValue) {
+      const [hours, minutes] = (timeValue || "").split(":").map(Number);
+      return hours * 60 + minutes;
+    }
+
+    function formatMinutes(totalMinutes) {
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
+      return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+    }
+
+    function snapToFiveMinutes(totalMinutes) {
+      return Math.min(
+        DAY_END,
+        Math.max(DAY_START, Math.round(totalMinutes / 5) * 5)
+      );
+    }
+
+    function createId() {
+      return `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
+    }
+
+    function escapeHtml(value) {
+      return value
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+  </script>
+</body>
+</html>
